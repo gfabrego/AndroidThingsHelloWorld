@@ -87,6 +87,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun stopLedBlink() {
         handler.removeCallbacks(blinkRunnable)
+        ledGpio.value = false
         isBlinking = false
     }
 
