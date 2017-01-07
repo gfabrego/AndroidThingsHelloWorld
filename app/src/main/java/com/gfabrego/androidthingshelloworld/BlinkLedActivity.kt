@@ -11,9 +11,9 @@ import com.google.android.things.pio.Gpio
 import com.google.android.things.pio.PeripheralManagerService
 import java.io.IOException
 
-class HomeActivity : AppCompatActivity() {
+class BlinkLedActivity : AppCompatActivity() {
     companion object {
-        private val TAG = "HomeActivity"
+        private val TAG = BlinkLedActivity.javaClass.simpleName
         private val GPIO_LED_NAME = "BCM6"
         private val GPIO_BUTTON_NAME = "BCM21"
         private val BLINK_INTERVAL_1000_MS: Long = 1000

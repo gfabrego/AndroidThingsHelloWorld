@@ -10,7 +10,7 @@
 
         <uses-library android:name="com.google.android.things"/>
 
-        <activity android:name=".HomeActivity">
+        <activity android:name=".TemperatureActivity">
             <!-- Launch activity as default from Android Studio -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
