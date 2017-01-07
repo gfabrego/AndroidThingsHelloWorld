@@ -80,6 +80,7 @@ class TemperatureActivity : AppCompatActivity() {
 
     private fun showTemperature(lastTemperature: Float?) {
         if (lastTemperature != null) {
+            // TODO 07/01/2017: display just one decimal
             numericDisplay.display(lastTemperature.toDouble())
         }
     }
