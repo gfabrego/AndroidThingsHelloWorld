@@ -10,11 +10,13 @@ import android.util.Log
 import com.google.android.things.contrib.driver.bmx280.Bmx280SensorDriver
 import com.google.android.things.contrib.driver.ht16k33.AlphanumericDisplay
 import java.io.IOException
+import java.math.RoundingMode
+import java.text.DecimalFormat
 
 class TemperatureActivity : AppCompatActivity() {
 
     companion object {
-        private val TAG = TemperatureActivity.javaClass.simpleName
+        private val TAG = TemperatureActivity::class.java.simpleName
         private val BUS_NAME = "I2C1"
     }
 
@@ -34,14 +36,22 @@ class TemperatureActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
-        // TODO 07/01/2017: add required try / catch
         sensorManager.unregisterListener(temperatureListener)
         sensorManager.unregisterDynamicSensorCallback(dynamicSensorCallback)
-        environmentSensorDriver.close()
-        numericDisplay.clear()
-        numericDisplay.setEnabled(false)
-        numericDisplay.close()
+        try {
+            environmentSensorDriver.close()
+        } catch (e: IOException) {
+            Log.e(TAG, "Error closing sensor driver", e)
+        }
+        try {
+            numericDisplay.clear()
+            numericDisplay.setEnabled(false)
+            numericDisplay.close()
+        } catch (e: IOException) {
+            Log.e(TAG, "Error closing numeric display", e)
+        }
+
+        super.onDestroy()
     }
 
     private fun initializeDisplay() {
@@ -68,7 +78,7 @@ class TemperatureActivity : AppCompatActivity() {
     private fun initializeTemperatureListener() {
         temperatureListener = object: SensorEventListener {
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-                // TODO 07/01/2017
+                // TODO 07/01/2017: show a led error if accuracy goes below a given treshold and ignore results
             }
 
             override fun onSensorChanged(event: SensorEvent?) {
@@ -80,8 +90,10 @@ class TemperatureActivity : AppCompatActivity() {
 
     private fun showTemperature(lastTemperature: Float?) {
         if (lastTemperature != null) {
-            // TODO 07/01/2017: display just one decimal
-            numericDisplay.display(lastTemperature.toDouble())
+            val decimalFormat = DecimalFormat("#.0")
+            decimalFormat.roundingMode = RoundingMode.UP
+            val temperatureAsString = decimalFormat.format(lastTemperature.toDouble())
+            numericDisplay.display(temperatureAsString)
         }
     }
 
