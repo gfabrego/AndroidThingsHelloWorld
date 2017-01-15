@@ -10,6 +10,7 @@ import android.util.Log
 import com.google.android.things.contrib.driver.bmx280.Bmx280SensorDriver
 import com.google.android.things.contrib.driver.ht16k33.AlphanumericDisplay
 import java.io.IOException
+import java.io.RandomAccessFile
 import java.math.RoundingMode
 import java.text.DecimalFormat
 
@@ -17,6 +18,7 @@ class TemperatureActivity : AppCompatActivity() {
 
     companion object {
         private val TAG = TemperatureActivity::class.java.simpleName
+        private val CPU_TEMPERATURE_FILE = "/sys/class/thermal/thermal_zone0/temp"
         private val BUS_NAME = "I2C1"
     }
 
@@ -25,6 +27,7 @@ class TemperatureActivity : AppCompatActivity() {
     private lateinit var temperatureListener : SensorEventListener
     private lateinit var environmentSensorDriver : Bmx280SensorDriver
     private lateinit var numericDisplay : AlphanumericDisplay
+    private var cpuTemperature: Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,17 +85,40 @@ class TemperatureActivity : AppCompatActivity() {
             }
 
             override fun onSensorChanged(event: SensorEvent?) {
+                // TODO 15/01/2017: refactor
                 val lastTemperature = event?.values?.first()
-                showTemperature(lastTemperature)
+                readCpuTemperature()
+                // TODO 15/01/2017: save and return last known value instead of 0 if no last value
+                val valueToDisplay = calculateTemperature(lastTemperature, cpuTemperature)
+                showTemperature(valueToDisplay)
             }
         }
     }
 
-    private fun showTemperature(lastTemperature: Float?) {
+    private fun calculateTemperature(lastTemperature: Float?, cpuTemperature: Double): Double? {
+        // From https://shop.pimoroni.com/products/rainbow-hat-for-android-things notes
         if (lastTemperature != null) {
+            return lastTemperature - (cpuTemperature - lastTemperature)
+            // Dividing by 2 as suggested in the notes doesn't seem to give correct results
+            // return lastTemperature - (cpuTemperature - lastTemperature) / 2
+        }
+        return 0.0
+    }
+
+    private fun readCpuTemperature() {
+        val cpuTemperatureFile = RandomAccessFile(CPU_TEMPERATURE_FILE, "r")
+        val cpuTemperatureAsString = cpuTemperatureFile.readLine()
+        if (cpuTemperatureAsString != null) {
+            cpuTemperature = cpuTemperatureAsString.toDouble() / 1000
+        }
+        cpuTemperatureFile.close()
+    }
+
+    private fun showTemperature(temperature: Double?) {
+        if (temperature != null) {
             val decimalFormat = DecimalFormat("#.0")
             decimalFormat.roundingMode = RoundingMode.UP
-            val temperatureAsString = decimalFormat.format(lastTemperature.toDouble())
+            val temperatureAsString = decimalFormat.format(temperature.toDouble())
             numericDisplay.display(temperatureAsString)
         }
     }
